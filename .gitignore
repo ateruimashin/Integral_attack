@@ -1,0 +1,5 @@
+# exclude gurobi.py
+gurobipy.pyd
+
+# exclude Compiled Python File
+*.pyc
