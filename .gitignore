@@ -3,3 +3,8 @@ gurobipy.pyd
 
 # exclude Compiled Python File
 *.pyc
+
+# Untracked directory
+CHAM_BDPT_Original
+SIMON_BDPT_Original
+
