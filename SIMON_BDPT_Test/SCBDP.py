@@ -32,9 +32,24 @@ class Simon:
     LPファイルに書くべき情報
     ・制約式(初期条件含む)
     ・変数のタイプ(binary)
-
-	解を持つか否か判定するだけなので、目的関数は必要ない
     """
+
+    def CreateObjectiveFunction(self):
+        """
+        目的関数の設定
+        藤堂さん曰く設定したほうが早くなるらしい
+        """
+        fileobj = open(self.filename_model, "a")
+        fileobj.write("Minimize\n")
+        eqn = []
+        for i in range(0, self.WORD_LENGTH):
+            eqn.append("x" + "_" + str(self.Round) + "_" + str(i))
+        for j in range(0, self.WORD_LENGTH):
+            eqn.append("y" + "_" + str(self.Round) + "_" + str(j))
+        temp = " + ".join(eqn)
+        fileobj.write(temp)
+        fileobj.write("\n")
+        fileobj.close()
 
     def CreateVariable(self, n, x):  # n:段数, x:変数名
         """
