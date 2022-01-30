@@ -122,7 +122,6 @@ def sarchBDPTtrail(WORD_LENGTH, ROUND, M, K, L):
                 L = next_L[:]
 
             else:  # 段鍵の排他的論理和(Q_{i,n}の時の処理)
-                new_L = []
                 for l in L:
                     '''
                     集合Kの更新
@@ -137,11 +136,6 @@ def sarchBDPTtrail(WORD_LENGTH, ROUND, M, K, L):
                             new_k[XOR_key] = 1
                             K.append(new_k)			# 1を排他したベクトルは集合Kに代入する
 
-                    # 集合Lの更新
-                    new_L.append(l)
-
-                L = new_L[:]
-
                 # 余分なベクトルlを集合Lから除く
                 new_L = []
                 for l in L:
@@ -152,9 +146,12 @@ def sarchBDPTtrail(WORD_LENGTH, ROUND, M, K, L):
                             temp.append(a and b)
                         if temp == k:
                             jugde = False
-                            break
+                            break   # 冗長なベクトルを除外する
                     if jugde:
-                        new_L.append(l)
+                        new_L.append(l)  # それ以外を再びnew_Lに入れる
+
+                # 集合Lの更新(冗長なベクトルが取り除かれた集合Lが得られる)
+                L = new_L[:]
 
                 '''
                 集合K内のベクトルをそれぞれswapする
@@ -162,16 +159,19 @@ def sarchBDPTtrail(WORD_LENGTH, ROUND, M, K, L):
                 例えばリスト内から取り出した要素をelementとすると、element+=2としてもリスト内の要素は書き換えられない。
                 書き換えたい場合は、新しいオブジェクトに代入してfor文が終わった後に元のオブジェクトに新しいオブジェクトを代入する、
                 もしくは、次のようにindexも取得してその位置に代入するということを行う。
+                詳細はhttps://ateruimashin.com/diary/2022/01/python-for-list/ に書いたので参照してください。
                 '''
+
                 for elementIndex, element in enumerate(K):
-                    K[elementIndex] = element[WORD_LENGTH:] + \
-                        element[:WORD_LENGTH]
+                    K[elementIndex] = \
+                        element[WORD_LENGTH:] \
+                        + element[:WORD_LENGTH]
 
                 # 集合L内のベクトルをそれぞれswapする
-                L = new_L[:]    # 集合new_Lを集合Lに代入(コピーしてる)
                 for elementIndex, element in enumerate(L):
-                    L[elementIndex] = element[WORD_LENGTH:] + \
-                        element[:WORD_LENGTH]
+                    L[elementIndex] = \
+                        element[WORD_LENGTH:] \
+                        + element[:WORD_LENGTH]
 
                 # Stopping Rule 3
                 if r == ROUND - 1:
