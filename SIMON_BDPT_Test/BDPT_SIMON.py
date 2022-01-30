@@ -16,7 +16,7 @@
 
     <検証済み>
     - 動作環境
-        Python2.7.18 64-bit
+        Python3.9.1 64-bit
         Gurobi9.5.0
     -結果
         ---14round-SIMON32---
@@ -31,6 +31,8 @@
         - 全てのビットを探索できるよう探索部分を関数にまとめた
         - 論文の参照箇所などをコメントに追記した
         - 全てのビットの特性の出力をまとめて行えるようにした
+        - 鍵の排他とswappingのタイミングを調整することで他の暗号にも適用しやすくした
+        - 時間を計測している(おまけ)
 
     <Originalとの変更点>
         - Originalではブロック長を可変にしていたが、このプログラムでは32bit固定とした
@@ -39,7 +41,9 @@
     論文に記載のアルゴリズム通りにプログラムを記述し、更にゼミで詳しい説明をしてくれた
     M1のMr. Nに感謝を示します。
 """
+from re import I
 from SCBDP import Simon
+import time
 
 
 def sarchBDPTtrail(WORD_LENGTH, ROUND, M, K, L):
@@ -120,16 +124,21 @@ def sarchBDPTtrail(WORD_LENGTH, ROUND, M, K, L):
             else:  # 段鍵の排他的論理和(Q_{i,n}の時の処理)
                 new_L = []
                 for l in L:
-                    # 集合Kの更新
+                    '''
+                    集合Kの更新
+                    BDPT後のpuring techniqueによって、最初の集合Kは空集合になっている。
+                    この後、集合L内から条件を満たすベクトルを見つけ、それを集合Kに代入していく。
+                    '''
                     for i in range(WORD_LENGTH):
-                        if l[WORD_LENGTH + i] == 0:  # BDPTにおける鍵の排他の制約式は1をANDするので、0の場合のみbitの値が変わる
-                            new_k = l[WORD_LENGTH:] + \
-                                l[:WORD_LENGTH]  # 左右入れ替え(逆？)
-                            new_k[i] = 1
-                            K.append(new_k)			# 1を排他したベクトルはKベクトルに代入する
+                        # 鍵をXORする場所は右側なので、そのビット位置を算出する
+                        XOR_key = WORD_LENGTH + i
+                        if l[XOR_key] == 0:  # BDPTにおける鍵の排他の制約式は1をANDするので、0の場合のみbitの値が変わる
+                            new_k = l[:]
+                            new_k[XOR_key] = 1
+                            K.append(new_k)			# 1を排他したベクトルは集合Kに代入する
 
                     # 集合Lの更新
-                    new_L.append(l[WORD_LENGTH:] + l[:WORD_LENGTH])  # 左右入れ替え
+                    new_L.append(l)
 
                 L = new_L[:]
 
@@ -147,7 +156,22 @@ def sarchBDPTtrail(WORD_LENGTH, ROUND, M, K, L):
                     if jugde:
                         new_L.append(l)
 
-                L = new_L[:]
+                '''
+                集合K内のベクトルをそれぞれswapする
+                pythopnのfor文内でオブジェクト内の要素を書き換える時の注意点
+                例えばリスト内から取り出した要素をelementとすると、element+=2としてもリスト内の要素は書き換えられない。
+                書き換えたい場合は、新しいオブジェクトに代入してfor文が終わった後に元のオブジェクトに新しいオブジェクトを代入する、
+                もしくは、次のようにindexも取得してその位置に代入するということを行う。
+                '''
+                for elementIndex, element in enumerate(K):
+                    K[elementIndex] = element[WORD_LENGTH:] + \
+                        element[:WORD_LENGTH]
+
+                # 集合L内のベクトルをそれぞれswapする
+                L = new_L[:]    # 集合new_Lを集合Lに代入(コピーしてる)
+                for elementIndex, element in enumerate(L):
+                    L[elementIndex] = element[WORD_LENGTH:] + \
+                        element[:WORD_LENGTH]
 
                 # Stopping Rule 3
                 if r == ROUND - 1:
@@ -158,6 +182,10 @@ def sarchBDPTtrail(WORD_LENGTH, ROUND, M, K, L):
 
 
 if __name__ == "__main__":
+    '''
+    時間計測
+    '''
+    start = time.time()
 
     '''
     ROUND段目の出力暗号文の特性を判定する
@@ -202,3 +230,6 @@ if __name__ == "__main__":
         result.append(sarchBDPTtrail(WORD_LENGTH, ROUND, M, K, L))
 
     print(result)
+
+    processTime = time.time() - start
+    print(processTime)
