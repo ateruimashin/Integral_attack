@@ -8,3 +8,6 @@ gurobipy.pyd
 CHAM_BDPT_Original
 SIMON_BDPT_Original
 
+# exclude LP file
+*.lp
+
