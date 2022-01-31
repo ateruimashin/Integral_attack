@@ -14,7 +14,7 @@
 """
 
 
-from SCBDP import Simon
+from shadowSCBDP import Shadow
 
 '''
 関数内で使い回す変数や辞書をグローバル空間で宣言している
@@ -41,11 +41,17 @@ def sarchBDPTtrail(ROUND, M, K, L):
     e[M] = 1								# Mbit目のみ1にしている
     # ここまででe = 0...010...0となる
 
-    for r in range(ROUND):
+    for r in range(ROUND * 2):    # half-roundで1段とする
         # r段目段関数を分割した各処理の番号(core operationが何回行われるかという意味)
-        for num in range(4 * (WORD_LENGTH + 1)):
-
-            if num != 8 and num != 17 and num != 26 and num != 35:  # numが鍵の排他タイミングではない場合
+        for num in range(2 * WORD_LENGTH + 3):
+            '''
+            Q_{i,0} ~ Q_{i,7} : 左側core operation
+            Q_{i,8}           : 左側key XOR
+            Q_{i,9} ~ Q_{i,16}: 右側core operation
+            Q_{i,17}          : 右側key XOR
+            Q_{i,18}          : permutation
+            '''
+            if num != 8 and num != 17 and num != 18:    # core operationでの伝搬を追う
                 for k in K:
                     '''
                     r: 現在のラウンド
@@ -53,13 +59,7 @@ def sarchBDPTtrail(ROUND, M, K, L):
                     k: Kベクトル
                     M: 調べるビット位置
                     '''
-                    if (num >= 0 and num <= 7) or (num >= 18 and num <= 25):
-                        shadow = Simon(
-                            ROUND, r, num % 8, k[: WORD_LENGTH * 2], M, WORD_LENGTH)
-                    else:
-                        shadow = Simon(
-                            ROUND, r, num % 8, k[WORD_LENGTH * 2:], M, WORD_LENGTH)
-
+                    shadow = Shadow(ROUND, WORD_LENGTH, r, num, k, M)
                     shadow.MakeModel()  # LPファイルの作成
                     solveK_Result = shadow.SolveModel()
                     if solveK_Result == 'unknown':  # Stopping Rule 1☜lazy propagation
@@ -80,12 +80,7 @@ def sarchBDPTtrail(ROUND, M, K, L):
                     l: Lベクトル
                     M: 調べるビット位置
                     '''
-                    if (num >= 0 and num <= 7) or (num >= 18 and num <= 25):
-                        shadow = Simon(
-                            ROUND, r, num % 8, l[: WORD_LENGTH * 2], M, WORD_LENGTH)
-                    else:
-                        shadow = Simon(
-                            ROUND, r, num % 8, l[WORD_LENGTH * 2:], M, WORD_LENGTH)
+                    shadow = Shadow(ROUND, WORD_LENGTH, r, num, l, M)
                     shadow.MakeModel()
                     solveL_Result = shadow.SolveModel()
                     if solveL_Result == 'unknown':
@@ -102,20 +97,22 @@ def sarchBDPTtrail(ROUND, M, K, L):
                 next_L = []
 
                 '''
-                core operationで対象となるbit番号(アルゴリズム3 19行目)
-                shadowはSIMONを4回行い、右16ビットを右側のSIMON、左16ビットを左側のSIMONに通す。
-                そのため、どちらか片方を通した後の32ビットを考える必要がある。
+                core operationで対象となるbit番号をindexに入れる(アルゴリズム3 19行目)
                 '''
                 index = []
                 # 左側(0~15ビット目)にcore operationを行うときのindex
                 index1 = [(num + 1) % WORD_LENGTH, (num + 7) %
                           WORD_LENGTH, (num + 2) % WORD_LENGTH, WORD_LENGTH + num]
                 # 右側(16~31ビット目)にcore operationを行うときのindex
-                index2 = [(num + 1) % WORD_LENGTH + 16, (num + 7) % WORD_LENGTH +
-                          16, (num + 2) % WORD_LENGTH + 16, WORD_LENGTH + num + 16]
-                if (num >= 0 and num <= 7) or (num >= 18 and num <= 25):
+                '''
+                右側のcore operationではQ_{i,9} ~ Q_{i,16}としたので、index1と同じにするにはnumを-9する必要がある。
+                よって、index1を参考にnum-9+1=num-8となるので、これを用いる。
+                '''
+                index2 = [(num - 8) % WORD_LENGTH + 16, (num - 2) % WORD_LENGTH +
+                          16, (num - 7) % WORD_LENGTH + 16, WORD_LENGTH + (num - 9) + 16]
+                if num <= 7:    # 左側のcore operationの時index1を使う
                     index = index1[:]
-                else:
+                else:           # 右側のcore operationの時index2を使う
                     index = index2[:]
 
                 # core operationでのBDPT伝搬
@@ -140,12 +137,12 @@ def sarchBDPTtrail(ROUND, M, K, L):
 
                 L = next_L[:]
 
-            else:
+            elif num == 8 or num == 17:
                 for l in L:
                     # 集合Kの更新
                     for i in range(WORD_LENGTH):
                         # 鍵を排他するビット位置
-                        if(num == 8 or num == 26):
+                        if num == 8:
                             XOR_key = WORD_LENGTH + i
                         else:
                             XOR_key = 3 * WORD_LENGTH + i
@@ -171,52 +168,52 @@ def sarchBDPTtrail(ROUND, M, K, L):
 
                 L = new_L[:]  # 集合Lを更新
 
+            else:  # permutation
                 '''
-                4つのwordにa,b,c,dと名前をつける。この時numの値によってシャッフルが異なる。以下にシャッフル前後のwordの関係を示す。
-                num = 17: a,b,c,d -> b,a,d,c
-                num = 35: a,b,c,d -> c,b,a,d
+                pythopnのfor文内でオブジェクト内の要素を書き換える時の注意点
+                例えばリスト内から取り出した要素をelementとすると、element+=2としてもリスト内の要素は書き換えられない。
+                書き換えたい場合は、新しいオブジェクトに代入してfor文が終わった後に元のオブジェクトに新しいオブジェクトを代入する、
+                もしくは、次のようにindexも取得してその位置に代入するということを行う。
+                詳細はhttps://ateruimashin.com/diary/2022/01/python-for-list/ に書いたので参照してください。
                 '''
-                if(num == 17):
-                    # 集合K内のベクトルをそれぞれswapする
-                    '''
-                    pythopnのfor文内でオブジェクト内の要素を書き換える時の注意点
-                    例えばリスト内から取り出した要素をelementとすると、element+=2としてもリスト内の要素は書き換えられない。
-                    書き換えたい場合は、新しいオブジェクトに代入してfor文が終わった後に元のオブジェクトに新しいオブジェクトを代入する、
-                    もしくは、次のようにindexも取得してその位置に代入するということを行う。
-                    詳細はhttps://ateruimashin.com/diary/2022/01/python-for-list/ に書いたので参照してください。
-                    '''
+                # 集合K内のベクトルをそれぞれswapする
+                if r % 2 == 0:  # half-round前半の時
                     for elementIndex, element in enumerate(K):
                         K[elementIndex] = \
                             element[WORD_LENGTH: WORD_LENGTH * 2] +\
                             + element[: WORD_LENGTH] \
-                            + element[WORD_LENGTH * 3: WORD_LENGTH * 4] \
+                            + element[WORD_LENGTH * 3:] \
                             + element[WORD_LENGTH * 2: WORD_LENGTH * 3]
+                else:   # half-round後半の時
+                    for elementIndex, element in enumerate(K):
+                        K[elementIndex] = \
+                            element[WORD_LENGTH * 2: WORD_LENGTH * 3] +\
+                            + element[WORD_LENGTH: WORD_LENGTH * 2] \
+                            + element[: WORD_LENGTH] \
+                            + element[WORD_LENGTH * 3:]
 
-                    # 集合L内のベクトルをそれぞれswapする
+                # 集合L内のベクトルをそれぞれswapする
+                if r % 2 == 0:  # half-round前半のとき
                     for elementIndex, element in enumerate(L):
                         L[elementIndex] = \
                             element[WORD_LENGTH: WORD_LENGTH * 2] +\
                             + element[: WORD_LENGTH] \
                             + element[WORD_LENGTH * 3: WORD_LENGTH * 4] \
                             + element[WORD_LENGTH * 2: WORD_LENGTH * 3]
-
-                elif(num == 35):
-                    for elementIndex, element in enumerate(K):
-                        K[elementIndex] = element[WORD_LENGTH:] + \
-                            element[:WORD_LENGTH]
-
-                    # 集合L内のベクトルをそれぞれswapする
-                    L = new_L[:]    # 集合new_Lを集合Lに代入(コピーしてる)
+                else:   # half-round後半の時
                     for elementIndex, element in enumerate(L):
-                        L[elementIndex] = element[WORD_LENGTH:] + \
-                            element[:WORD_LENGTH]
+                        L[elementIndex] = \
+                            element[WORD_LENGTH * 2: WORD_LENGTH * 3] +\
+                            + element[WORD_LENGTH: WORD_LENGTH * 2] \
+                            + element[: WORD_LENGTH] \
+                            + element[WORD_LENGTH * 3:]
 
-                # Stopping Rule 3
-                if r == ROUND - 1:
-                    if (not K) and (e in L):
-                        return('b')
-                    else:
-                        return('?')
+            # Stopping Rule 3
+            if r == ROUND - 1:
+                if (not K) and (e in L):
+                    return('b')
+                else:
+                    return('?')
 
 
 if __name__ == "__main__":
