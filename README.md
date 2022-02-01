@@ -5,12 +5,15 @@
 # CAUTION
 混合整数線形計画法(MILP)を用いるため、MILPのソルバーが必要になります。  
 研究室ではMILPソルバーに[Gurobi](https://www.gurobi.com/)を用いています。  
-解析のためにGurobiをインストール後、インストール先のフォルダ内からgurobipy.pydを探し、SCBDP.pyと同じディレクトリに配置します。
-また、Gurobiインストール後にライセンス認証を行う必要があります。  
-最後に、BDPT_(cipher name)をpython2.7系で走らせると解析が始まります。
+解析のためにGurobiをインストール後、インストール先のフォルダ内からライブラリをコピーする必要があります。  
+
+> 例: Gurobi9.5.0の場合
+> [Gurobi Optimizer – Get the Software](https://www.gurobi.com/downloads/gurobi-software/)からインストーラーを入手します。インストール終了後、ライセンス認証を行います。その後、インストール先からPython用のライブラリを取り出します。ライブラリはPythonのバージョンごとに分けられています。Python3.9.xの場合パスは次の通りです。  
+> インストール先/gurobi950/win64/python39  
+> 最後にその中にあるlibフォルダをPythonのインストール先にあるLib内にコピーします。
 
 # References
 - [THE SIMON AND SPECK FAMILIES OF LIGHTWEIGHT BLOCK CHIPERS](https://eprint.iacr.org/2013/404.pdf)  
-- [Shadow: A Lightweight Block Cipher for IoT Nodes](https://ieeexplore.ieee.org/abstract/document/9372286)  
+- [Shadow: A Lightweight Block Cipher for IoT Nodes](ht/ieeexplore.ieee.org/abstract/document/9372286)  
 - [Bit-Based Division Property and Application to Simon Family](https://eprint.iacr.org/2016/285.pdf)  
 - [MILP Method of Searching Integral Distinguishers Based on Division Property Using Three Subsets](https://eprint.iacr.org/2018/1186)  
