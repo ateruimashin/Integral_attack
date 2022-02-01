@@ -7,7 +7,7 @@
 研究室ではMILPソルバーに[Gurobi](https://www.gurobi.com/)を用いています。  
 解析のためにGurobiをインストール後、インストール先のフォルダ内からライブラリをコピーする必要があります。  
 
-> 例: Gurobi9.5.0の場合
+> 例: Gurobi9.5.0の場合  
 > [Gurobi Optimizer – Get the Software](https://www.gurobi.com/downloads/gurobi-software/)からインストーラーを入手します。インストール終了後、ライセンス認証を行います。その後、インストール先からPython用のライブラリを取り出します。ライブラリはPythonのバージョンごとに分けられています。Python3.9.xの場合パスは次の通りです。  
 > インストール先/gurobi950/win64/python39  
 > 最後にその中にあるlibフォルダをPythonのインストール先にあるLib内にコピーします。
