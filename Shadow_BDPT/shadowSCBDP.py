@@ -6,16 +6,16 @@ from gurobipy import *
 
 
 class Shadow:
-    def __init__(self, Round, i, j, k, m, word_len):  # SIMON_2nのnがword_len。2nはブロックサイズを表す。
+    def __init__(self, Round, i, j, k, m, word_len):
         self.Round = Round  # 何段のSIMONか (self.Round >= 1)
         self.i = i  # i段目から 0 <= i < Round
         self.j = j  # jパートから
         self.k = k  # kベクトル
         self.m = m  # 最終段出力で1とするbit番号
-        self.blocksize = 2 * word_len
+        self.blocksize = 4 * word_len
         self.WORD_LENGTH = word_len
-        self.filename_model = "Shadow_" + \
-            str(word_len * 4) + "_" + str(self.Round) + ".lp"
+        self.filename_model = "Shadow" + \
+            str(self.blocksize) + "_" + str(self.Round) + ".lp"
         fileobj = open(self.filename_model, "w")
         fileobj.close()
 
@@ -119,18 +119,14 @@ class Shadow:
 
     def ForPartialRound(self, x_out, y_in):
         '''
-        関数L4の制約式(CBDPのみで探す時はなかった部分)
+        関数L4の制約式
         Q_{i,j}で伝播を追い終わったビット位置は入力と出力が同じにならないといけないという意味
         '''
         with open(self.filename_model, "a") as fileobj:
             for j in range(self.j):
-                if j < 8:
-                    fileobj.write(x_out[j] + ' - ' + y_in[j] + ' = 0')
-                    fileobj.write("\n")
-                else:
-                    fileobj.write(x_out[j + 16] + ' - ' +
-                                  y_in[j + 16] + ' = 0')
-                    fileobj.write("\n")
+                fileobj.write(x_out[j] + ' - ' + y_in[j] + ' = 0')
+                fileobj.write("\n")
+                fileobj.write("\n")
 
     def Init(self):
         """
@@ -143,7 +139,7 @@ class Shadow:
         x2 = self.CreateVariable(self.i, "x2")
         x3 = self.CreateVariable(self.i, "x3")
         data = x0 + x1 + x2 + x3
-        for i in range(self.WORD_LENGTH * 4):
+        for i in range(self.blocksize):
             fileobj.write(data[i] + " = " + str(self.k[i]))
             fileobj.write("\n")
         fileobj.close()
@@ -209,7 +205,8 @@ class Shadow:
                     x0_out = x0_in, x2_out = x2_inと読み替えると理解しやすい。
                     '''
                     self.ForPartialRound(x0_out, x1_in)
-                    self.ForPartialRound(x2_out, x3_in)
+                    if self.j > 7:
+                        self.ForPartialRound(x2_out, x3_in)
 
                 # copy
                 self.CreateConstrainsSplit(
@@ -246,7 +243,8 @@ class Shadow:
                 # partial round
                 if i == self.i:
                     self.ForPartialRound(x1_out, x1_in)
-                    self.ForPartialRound(x3_out, x3_in)
+                    if self.j > 8:
+                        self.ForPartialRound(x3_out, x3_in)
                 # copy
                 self.CreateConstrainsSplit(
                     x0_in, al, bl, cl, x2_out)
@@ -351,6 +349,7 @@ class Shadow:
         self.CreateObjectiveFunction()
         self.Constraint()
         self.Init()
+        self.end()
         self.BinaryVariable()
 
     # -----------------------------------------------------end--------------------------------------------------------------------------------
