@@ -80,7 +80,7 @@ def sarchBDPTtrail(ROUND, M, K, L):
                     l: Lベクトル
                     M: 調べるビット位置
                     '''
-                    shadow = Shadow(ROUND, WORD_LENGTH, r, num, l, M)
+                    shadow = Shadow(ROUND, r, num, l, M, WORD_LENGTH)
                     shadow.MakeModel()
                     solveL_Result = shadow.SolveModel()
                     if solveL_Result == 'unknown':
