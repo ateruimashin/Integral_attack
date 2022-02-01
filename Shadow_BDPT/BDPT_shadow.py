@@ -51,7 +51,7 @@ def sarchBDPTtrail(ROUND, M, K, L):
             Q_{i,17}          : 右側key XOR
             Q_{i,18}          : permutation
             '''
-            if num != 8 and num != 17 and num != 18:    # core operationでの伝搬を追う
+            if num < 16:    # core operationでの伝搬を追う
                 for k in K:
                     '''
                     r: 現在のラウンド
@@ -59,7 +59,7 @@ def sarchBDPTtrail(ROUND, M, K, L):
                     k: Kベクトル
                     M: 調べるビット位置
                     '''
-                    shadow = Shadow(ROUND, WORD_LENGTH, r, num, k, M)
+                    shadow = Shadow(ROUND,  r, num, k, M, WORD_LENGTH)
                     shadow.MakeModel()  # LPファイルの作成
                     solveK_Result = shadow.SolveModel()
                     if solveK_Result == 'unknown':  # Stopping Rule 1☜lazy propagation
@@ -105,11 +105,11 @@ def sarchBDPTtrail(ROUND, M, K, L):
                           WORD_LENGTH, (num + 2) % WORD_LENGTH, WORD_LENGTH + num]
                 # 右側(16~31ビット目)にcore operationを行うときのindex
                 '''
-                右側のcore operationではQ_{i,9} ~ Q_{i,16}としたので、index1と同じにするにはnumを-9する必要がある。
-                よって、index1を参考にnum-9+1=num-8となるので、これを用いる。
+                右側のcore operationではQ_{i,8} ~ Q_{i,15}としたので、index1と同じにするにはnumを-8する必要がある。
+                よって、index1を参考にnum-8+1=num-7となるので、これを用いる。
                 '''
-                index2 = [(num - 8) % WORD_LENGTH + 16, (num - 2) % WORD_LENGTH +
-                          16, (num - 7) % WORD_LENGTH + 16, WORD_LENGTH + (num - 9) + 16]
+                index2 = [(num - 7) % WORD_LENGTH + 16, (num - 1) % WORD_LENGTH +
+                          16, (num - 6) % WORD_LENGTH + 16, WORD_LENGTH + (num - 8) + 16]
                 if num <= 7:    # 左側のcore operationの時index1を使う
                     index = index1[:]
                 else:           # 右側のcore operationの時index2を使う
@@ -137,12 +137,12 @@ def sarchBDPTtrail(ROUND, M, K, L):
 
                 L = next_L[:]
 
-            elif num == 8 or num == 17:
+            elif num < 18:
                 for l in L:
                     # 集合Kの更新
                     for i in range(WORD_LENGTH):
                         # 鍵を排他するビット位置
-                        if num == 8:
+                        if num == 16:
                             XOR_key = WORD_LENGTH + i
                         else:
                             XOR_key = 3 * WORD_LENGTH + i
