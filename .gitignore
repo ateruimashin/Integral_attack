@@ -7,6 +7,7 @@ gurobipy.pyd
 # Untracked directory
 CHAM_BDPT_Original
 SIMON_BDPT_Original
+QTL_BDPT_Original
 
 # exclude LP file
 *.lp
