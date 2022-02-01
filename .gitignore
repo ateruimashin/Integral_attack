@@ -9,6 +9,10 @@ CHAM_BDPT_Original
 SIMON_BDPT_Original
 QTL_BDPT_Original
 
+# Untracked File
+Shadow_BDPT/SCBDP.py
+Shadow_BDPT/test.py
+
 # exclude LP file
 *.lp
 
