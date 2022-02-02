@@ -14,6 +14,7 @@
 """
 
 
+from asyncore import write
 from shadowSCBDP import Shadow
 
 '''
@@ -216,6 +217,23 @@ def sarchBDPTtrail(ROUND, M, K, L):
                     return('?')
 
 
+def writeResult(fileName, input, result):
+    # 入力をaとcに書き換える
+    integralInput = []
+    for element in input:
+        if element == 1:
+            integralInput.append('a')
+        else:
+            integralInput.append('c')
+
+    # ファイルに入出力結果を書き込む
+    with open(fileName, mode='a') as f:
+        f.writelines(integralInput)
+        f.write(" ")
+        f.writelines(result)
+        f.write("\n")
+
+
 if __name__ == "__main__":
 
     '''
@@ -240,20 +258,31 @@ if __name__ == "__main__":
     L = []
     '''
     P.17 4.3節を参照
-    Kベクトルの初期ベクトルは全て1固定でよい
+    Kベクトルの初期ベクトルは30階差分の時は全て1固定でよい
     Lベクトルの初期ベクトルに調べたい平文を入れる
     入力集合 左端=c, その他=a
     '''
     k0 = [1 for i in range(WORD_LENGTH*4)]
     K.append(k0)  # K=[11...1],32ビット
     l0 = [1 for i in range(WORD_LENGTH*4)]
-    l0[0] = 0
-    L.append(l0)  # L=[011...1],32ビット
+
+    # 結果出力用のファイル作成
+    fileName = "Shadow" + str(ROUND) + ".txt"
+    with open(fileName, mode='a') as f:
+        f.write("Shadow32 Result\n")
 
     # 結果のリスト
-    result = []
-    # 全ビットの特性探索
-    for M in range(WORD_LENGTH * 4):
-        result.append(sarchBDPTtrail(ROUND, M, K, L))
-
-    print(result)
+    # 全入力差分を作成
+    for active in range(32):
+        # L集合Lを初期化
+        L = []
+        # all 1のベクトルをコピーしてactive bitの位置を0に書き換えてから集合Lに代入
+        subL = l0[:]
+        subL[active] = 0
+        L.append(subL)
+        # 結果を受け取るリスト
+        result = []
+        # 全ビットの特性探索
+        for M in range(WORD_LENGTH * 4):
+            result.append(sarchBDPTtrail(ROUND, M, K, L))
+        writeResult(fileName, subL, result)
