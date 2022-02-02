@@ -124,9 +124,12 @@ class Shadow:
         '''
         with open(self.filename_model, "a") as fileobj:
             for j in range(self.j):
-                fileobj.write(x_out[j] + ' - ' + y_in[j] + ' = 0')
-                fileobj.write("\n")
-                fileobj.write("\n")
+                if self.j < 8:
+                    fileobj.write(x_out[j] + ' - ' + y_in[j] + ' = 0')
+                    fileobj.write("\n")
+                else:
+                    fileobj.write(x_out[j - 8] + ' - ' + y_in[j - 8] + ' = 0')
+                    fileobj.write("\n")
 
     def Init(self):
         """
@@ -243,7 +246,7 @@ class Shadow:
                 # partial round
                 if i == self.i:
                     self.ForPartialRound(x1_out, x1_in)
-                    if self.j > 8:
+                    if self.j > 7:
                         self.ForPartialRound(x3_out, x3_in)
                 # copy
                 self.CreateConstrainsSplit(
