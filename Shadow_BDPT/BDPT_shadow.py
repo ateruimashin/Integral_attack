@@ -59,7 +59,7 @@ def sarchBDPTtrail(ROUND, M, K, L):
                     k: Kベクトル
                     M: 調べるビット位置
                     '''
-                    shadow = Shadow(ROUND,  r, num, k, M, WORD_LENGTH)
+                    shadow = Shadow(ROUND * 2,  r, num, k, M, WORD_LENGTH)
                     shadow.MakeModel()  # LPファイルの作成
                     solveK_Result = shadow.SolveModel()
                     if solveK_Result == 'unknown':  # Stopping Rule 1☜lazy propagation
@@ -80,7 +80,7 @@ def sarchBDPTtrail(ROUND, M, K, L):
                     l: Lベクトル
                     M: 調べるビット位置
                     '''
-                    shadow = Shadow(ROUND, r, num, l, M, WORD_LENGTH)
+                    shadow = Shadow(ROUND * 2, r, num, l, M, WORD_LENGTH)
                     shadow.MakeModel()
                     solveL_Result = shadow.SolveModel()
                     if solveL_Result == 'unknown':
@@ -180,14 +180,14 @@ def sarchBDPTtrail(ROUND, M, K, L):
                 if r % 2 == 0:  # half-round前半の時
                     for elementIndex, element in enumerate(K):
                         K[elementIndex] = \
-                            element[WORD_LENGTH: WORD_LENGTH * 2] +\
+                            element[WORD_LENGTH: WORD_LENGTH * 2] \
                             + element[: WORD_LENGTH] \
                             + element[WORD_LENGTH * 3:] \
                             + element[WORD_LENGTH * 2: WORD_LENGTH * 3]
                 else:   # half-round後半の時
                     for elementIndex, element in enumerate(K):
                         K[elementIndex] = \
-                            element[WORD_LENGTH * 2: WORD_LENGTH * 3] +\
+                            element[WORD_LENGTH * 2: WORD_LENGTH * 3] \
                             + element[WORD_LENGTH: WORD_LENGTH * 2] \
                             + element[: WORD_LENGTH] \
                             + element[WORD_LENGTH * 3:]
@@ -196,14 +196,14 @@ def sarchBDPTtrail(ROUND, M, K, L):
                 if r % 2 == 0:  # half-round前半のとき
                     for elementIndex, element in enumerate(L):
                         L[elementIndex] = \
-                            element[WORD_LENGTH: WORD_LENGTH * 2] +\
+                            element[WORD_LENGTH: WORD_LENGTH * 2] \
                             + element[: WORD_LENGTH] \
                             + element[WORD_LENGTH * 3: WORD_LENGTH * 4] \
                             + element[WORD_LENGTH * 2: WORD_LENGTH * 3]
                 else:   # half-round後半の時
                     for elementIndex, element in enumerate(L):
                         L[elementIndex] = \
-                            element[WORD_LENGTH * 2: WORD_LENGTH * 3] +\
+                            element[WORD_LENGTH * 2: WORD_LENGTH * 3] \
                             + element[WORD_LENGTH: WORD_LENGTH * 2] \
                             + element[: WORD_LENGTH] \
                             + element[WORD_LENGTH * 3:]
