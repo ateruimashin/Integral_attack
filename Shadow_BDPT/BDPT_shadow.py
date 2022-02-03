@@ -1,16 +1,17 @@
 """
 <プログラム内容>
 	Shadowに対するBDPTを利用したIntegral特性探索
-
 	論文"MILP Method of Searching Integral Distinguishers Based on Division Property Using Three Subsets"
 	を参考に作成しています。論文名が示されていないページ数は全てこの論文のページ番号です。
-
 	入力:	ブロック長,段数(= ROUND),特性判定したいbit番号(= M)
 	出力:	最終段出力のMbit目の特性を標準出力へ表示
 	データの並び:	論文"MILP Method of Searching Integral Distinguishers Based on Division Property Using Three Subsets"
 					とは異なり (x_0,x_1,..,x_n-1,y_0,y_1,..,y_n-1) の順です。
                     そのため、core operationのbit-rotationでの演算が、論文では(j-1) mod nとなっているところは(j+1) mod nと
                     同じことを示します。
+
+    31階差分を求めるプログラム
+    caaaA AA AA AA ~ AA AA AA Aaaac
 """
 
 
