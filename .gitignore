@@ -16,3 +16,5 @@ Shadow_BDPT/test.py
 # exclude LP file
 *.lp
 
+# exclude Result text file
+*.txt
