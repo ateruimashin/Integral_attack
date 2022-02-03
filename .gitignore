@@ -18,3 +18,6 @@ Shadow_BDPT/test.py
 
 # exclude Result text file
 *.txt
+
+# exclude executable file
+a.out
